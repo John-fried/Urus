@@ -4,23 +4,44 @@ See also: [CHANGELOG.md](../../CHANGELOG.md) in the project root.
 
 ## Format
 
-The changelog follows the [Keep a Changelog](https://keepachangelog.com/) format:
+URUS uses a custom versioning format: `V{major}.{minor}/{patch}(tag)`
 
-```
-## [version] - YYYY-MM-DD
+| Tag | Name | Description |
+|-----|------|-------------|
+| `(F)` | Fixed | Bug fixes |
+| `(A)` | Added | New features added |
+| `(U)` | Updated | Changes / improvements |
+| `(P)` | Patched | Small patches |
+| `(B)` | Beta | Testing version |
+| `(R)` | Release | Stable release |
+| `(E)` | Experimental | Experimental features |
+| `(D)` | Dev | Development version |
 
-### Added
-- New features
+---
 
-### Changed
-- Changes to existing features
+## V0.2/2(F) — 2026-03-09
 
 ### Fixed
-- Bug fixes
+- Replace POSIX `getline()` with portable `fgets()` for MSVC compatibility
+- Fix double CRLF corruption on Windows — use binary mode (`"wb"`) for generated C files
+- Fix `--help` and `--version` flags being treated as filenames
+- Fix GCC `cc1` not found on Windows — inject GCC bin dir into PATH
+- Remove obsolete `-I include` flag (runtime now embedded)
+- Suppress MSVC `strdup` deprecation warnings
 
-### Removed
-- Removed features
-```
+### Added
+- `--version` / `-v` CLI flag
+- Colored error reporting with source context and caret pointer (PR #7)
+- Compiler is now standalone — runtime embedded in binary (PR #6)
+- CMake build system replacing Makefile + build.bat (PR #5)
+- `install` / `uninstall` targets (PR #3)
+- `show_help()` function in CLI (PR #4)
+- Linux compatibility fix for `urus_runtime.h` (PR #2)
+
+### Changed
+- Build system migrated from Makefile to CMake
+- Version scheme changed from semver to `V{major}.{minor}/{patch}(tag)`
+- Error reporting now shows filename, line, source code, and caret pointer
 
 ---
 
@@ -40,7 +61,7 @@ The changelog follows the [Keep a Changelog](https://keepachangelog.com/) format
 - **Break/continue validation** — error if outside a loop
 - **File restructuring** — `compiler/src/` and `compiler/include/`
 - **Test suite** — valid, invalid, and run tests with test runner
-- **Documentation** — README, SPEC, CHANGELOG, CLAUDE.md, and documentation/ folder
+- **Documentation** — README, SPEC, CHANGELOG, and documentation/ folder
 - **Examples** — 9 example programs (hello, fibonacci, structs, arrays, enums, strings, result, files, modules)
 - **License** — Apache 2.0
 

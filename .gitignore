@@ -1,42 +1,78 @@
-# CMake outputs
+# Build directories
 build/
-/CMakeFiles/
-/CMakeCache.txt
-/cmake_install.cmake
-/Makefile
-/install_manifest.txt
-/CompileCommands.json
+out/
+cmake-build-*/
 
-# Executables (urusc binary)
-/urusc
-/urusc.exe
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+CompileCommands.json
+*.cmake
+!compiler/cmake/embed-string.cmake
+!compiler/CMakeLists.txt
 
-# Build artifacts
+# Executables
+urusc
+urusc.exe
 *.exe
-*.o
-*.obj
 *.out
 
-# Generated C output (urus)
+# Object files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+
+# Generated C output (urus compiler temp)
+*_urus_tmp.c
 *_tmp.c
 
-# Compiler temp files
+# Compiler temp/log files
 compiler/build_err.txt
 compiler/build_output.txt
 compiler/sema_err.txt
 compiler/err.log
+*.log
 
 # IDE / Editor
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # OS files
 Thumbs.db
 .DS_Store
+Desktop.ini
+ehthumbs.db
 
-# Claude / AI
+# AI tools
 .claude/
 .qoder/
+.cursor/
+.copilot/
 
+# Package managers
+node_modules/
+.env
+.env.local
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z

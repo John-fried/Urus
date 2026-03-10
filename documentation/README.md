@@ -4,29 +4,70 @@ Complete documentation for URUS Programming Language V0.2/2(F).
 
 ## Table of Contents
 
-| # | Folder | Description |
-|---|--------|-------------|
-| 1 | [overview](./overview/) | Project goals, target users, tech stack |
-| 2 | [architecture](./architecture/) | Architecture diagrams, system flow, dependencies |
-| 3 | [installation](./installation/) | Requirements, installation guide, environment setup |
-| 4 | [usage](./usage/) | How to use, CLI commands, usage examples |
-| 5 | [configuration](./configuration/) | Compiler options, build config, import resolution |
-| 6 | [api-reference](./api-reference/) | Compiler API, runtime API, built-in functions |
-| 7 | [development-guide](./development-guide/) | Coding standard, branch strategy, testing |
-| 8 | [security](./security/) | Memory safety, known limitations, best practices |
-| 9 | [roadmap](./roadmap/) | Version planning, milestones, upcoming features |
-| 10 | [changelog](./changelog/) | Change history per version |
-
-## Bonus
-
-| Folder | Description |
-|--------|-------------|
-| [diagrams](./diagrams/) | Technical diagrams (pipeline, memory, enum layout) |
-| [decisions](./decisions/) | Architectural Decision Records (ADR) |
+| Section | Description |
+|---------|-------------|
+| [Overview](./overview/) | Project goals, target users, high-level architecture |
+| [Architecture](./architecture/) | Compiler pipeline, module dependencies, data flow |
+| [Installation](./installation/) | How to install GCC, CMake, and build the compiler |
+| [Usage](./usage/) | CLI options, language examples, built-in functions |
+| [Configuration](./configuration/) | Compiler flags, build options, import resolution |
+| [API Reference](./api-reference/) | Compiler C API and runtime API |
+| [Development Guide](./development-guide/) | Coding standards, branching, testing, adding features |
+| [Security](./security/) | Memory safety, compiler security, best practices |
+| [Roadmap](./roadmap/) | Version history, planned features, milestones |
+| [Changelog](./changelog/) | Detailed version-by-version changes |
+| [Diagrams](./diagrams/) | Technical diagrams and visual references |
+| [Decisions](./decisions/) | Architectural Decision Records (ADRs) |
 
 ## Quick Links
 
-- [Language Spec](../SPEC.md) — Full URUS language specification
-- [README](../README.md) — Project overview
-- [CHANGELOG](../CHANGELOG.md) — Version history
-- [Examples](../examples/) — Example URUS programs
+- [Language Specification](../SPEC.md)
+- [Contributing Guide](../CONTRIBUTING.md)
+- [Security Policy](../SECURITY.md)
+- [License](../LICENSE)
+- [Development Notes (Diary)](../Diary/)
+
+## Versioning
+
+URUS uses a custom versioning format: `V{major}.{minor}/{patch}(tag)`
+
+| Tag | Meaning |
+|-----|---------|
+| `(F)` | Fixed — bug fixes |
+| `(A)` | Added — new features |
+| `(U)` | Updated — improvements |
+| `(P)` | Patched — small patches |
+| `(B)` | Beta — testing version |
+| `(R)` | Release — stable |
+| `(E)` | Experimental — experimental features |
+| `(D)` | Dev — development version |
+
+Current version: **V0.2/2(F) "Fixed"**
+
+## Getting Started
+
+```bash
+# 1. Clone
+git clone https://github.com/Urus-Foundation/Urus.git
+cd Urus/compiler
+
+# 2. Build
+cmake -S . -B build
+cmake --build build --config Release
+
+# 3. Run
+./build/Release/urusc hello.urus -o hello    # Windows
+./build/urusc hello.urus -o hello            # Linux/macOS
+
+# 4. Test
+cd ../tests
+bash run_tests.sh ../compiler/build/urusc    # Linux/macOS
+run_tests.bat ..\compiler\build\Release\urusc.exe  # Windows
+```
+
+## Community
+
+- **GitHub:** https://github.com/Urus-Foundation/Urus
+- **Issues:** https://github.com/Urus-Foundation/Urus/issues
+- **Sponsor:** https://www.patreon.com/15684319
+- **Complaints & Feedback:** See [Diary/COMPLAINTS.md](../Diary/COMPLAINTS.md)

@@ -18,7 +18,7 @@ All heap-allocated values (str, array, struct) use ref-counting:
 typedef struct {
     char *data;
     int64_t len;
-    int32_t refcount;  // ← tracked
+    int32_t refcount;  // tracked automatically
 } urus_str;
 ```
 
@@ -52,6 +52,7 @@ Buffer overflow via array index is **not possible** in URUS code — the compile
 - No implicit type coercion (except explicit `to_str`/`to_int`/`to_float`)
 - No pointer arithmetic or unsafe operations
 - Immutable by default — must use explicit `mut` for mutation
+- No null pointers — uninitialized variables are a compile error
 
 ## Compiler Security
 
@@ -59,16 +60,18 @@ Buffer overflow via array index is **not possible** in URUS code — the compile
 
 - Lexer rejects invalid UTF-8 bytes
 - Parser rejects malformed syntax
-- Sema rejects type errors, undefined variables, etc.
+- Sema rejects type errors, undefined variables, unused symbols
+- Error reporting shows exact location without exposing internal state
 
 ### Potential Risks
 
-| Risk | Status | Mitigation |
-|------|--------|------------|
-| Buffer overflow in compiler | Low | Static buffers with size limit, round-robin |
-| Stack overflow (deep recursion) | Low | Usually only with very deeply nested code |
-| Arbitrary code execution via import | Medium | Import only reads files, does not execute |
-| Path traversal via import | Medium | Import is relative to the current file |
+| Risk | Severity | Status | Mitigation |
+|------|----------|--------|------------|
+| Buffer overflow in compiler | Low | Mitigated | Static buffers with size limit, round-robin |
+| Stack overflow (deep recursion) | Low | Known | Usually only with very deeply nested code |
+| Arbitrary code execution via import | Medium | Mitigated | Import only reads files, does not execute |
+| Path traversal via import | Medium | Mitigated | Import is relative to the current file |
+| CRLF injection in generated code | Low | Fixed | Binary mode write (`"wb"`) since V0.2/2(F) |
 
 ### Import Security
 
@@ -78,8 +81,9 @@ Imports are resolved relative to the importing file:
 import "../../etc/passwd";  // Only read as URUS source, not executed
 ```
 
-- Imported files must be valid URUS source (parsed)
+- Imported files must be valid URUS source (parsed and type-checked)
 - No network imports
+- No dynamic imports (all imports resolved at compile time)
 - Circular imports are detected (max 64 files)
 
 ## Environment & Secrets
@@ -89,6 +93,7 @@ URUS does not use:
 - Config files with secrets
 - Network connections
 - Database connections
+- Package registries or remote downloads
 
 ### File I/O Security
 
@@ -114,8 +119,18 @@ let data: str = read_file("path");
 
 1. **Always bounds-check** array and string access in the runtime
 2. **Use `snprintf`** instead of `sprintf` for buffer writes
-3. **Free all AST nodes** to avoid memory leaks in the compiler
-4. **Test with malformed input** — fuzzing is recommended
+3. **Use `fopen("wb")`** for generated files on Windows
+4. **Free all AST nodes** to avoid memory leaks in the compiler
+5. **Test with malformed input** — fuzzing is recommended
+6. **Never embed user input directly** in generated C code without escaping
+
+## Reporting Vulnerabilities
+
+If you find a security vulnerability, please report it via:
+- GitHub Security Advisories: https://github.com/Urus-Foundation/Urus/security/advisories
+- Or email: rasyaandrean@outlook.co.id
+
+Please do **not** open a public issue for security vulnerabilities.
 
 ## Known Limitations
 
@@ -126,3 +141,4 @@ let data: str = read_file("path");
 | No input sanitization | Strings from `read_file` are not escaped |
 | Single-threaded | No thread safety concerns, but also no concurrency |
 | No ASLR/DEP control | Depends on the OS and GCC flags |
+| No code signing | Compiled binaries are not signed |

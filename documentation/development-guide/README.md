@@ -6,7 +6,7 @@
 
 - **Standard:** C11 (`-std=c11`)
 - **Naming:** `snake_case` for all functions and variables
-- **Prefix:** All public APIs use a module prefix: `lexer_`, `parser_`, `sema_`, `codegen_`, `ast_`
+- **Prefix:** All public APIs use a module prefix: `lexer_`, `parser_`, `sema_`, `codegen_`, `ast_`, `error_`
 - **Runtime prefix:** `urus_` for all runtime functions
 - **Indentation:** 4 spaces (not tabs)
 - **Max line length:** ~100 characters (soft limit)
@@ -28,60 +28,70 @@ void lexer_next(Lexer *l) {
 - String literals in AST: duplicate with `strdup()`, free in `ast_free()`
 - Runtime strings: ref-counted via `urus_str_retain/release`
 - Static buffers: use round-robin to avoid clobber (see `ast_type_str`)
+- On Windows: use `fopen("wb")` for generated C files to prevent CRLF issues
 
 ### Error Handling in the Compiler
 
-- Fatal errors: print to stderr, then `exit(1)`
-- Error format: `filename:line:col: error: message`
+- Fatal errors: print to stderr with source context, then `exit(1)`
+- Error format: `filename:line: Error: message` (with ANSI color codes)
+- Error display includes: source line, caret pointer to exact column
 - No error recovery — compiler stops at the first error
 
 ## Branch Strategy
 
 ```
-main          ← stable, released versions
-  │
-  ├── dev     ← development branch
-  │   │
-  │   ├── feature/enums
-  │   ├── feature/imports
-  │   └── fix/array-bounds
-  │
-  └── release/v1.1.0
+main          <-- stable, released versions
+  |
+  +-- dev     <-- development branch (public contributions)
+  |   |
+  |   +-- feature/enums
+  |   +-- feature/imports
+  |   +-- fix/array-bounds
+  |
+  +-- release/V0.3-1
 ```
 
 | Branch | Purpose |
 |--------|---------|
 | `main` | Stable release, always compilable |
-| `dev` | Integration branch for new features |
+| `dev` | Integration branch for new features and public contributions |
 | `feature/*` | One feature per branch |
 | `fix/*` | Bug fixes |
 | `release/*` | Release preparation |
 
 ## How to Create a Pull Request
 
-1. **Create a branch** from `dev`:
+1. **Fork the repo** on GitHub
+
+2. **Create a branch** from `dev`:
    ```bash
    git checkout dev
    git pull
    git checkout -b feature/feature-name
    ```
 
-2. **Develop & commit:**
+3. **Develop & commit:**
    ```bash
-   git add src/file.c include/file.h
-   git commit -m "Add: short description of changes"
+   git add compiler/src/file.c compiler/include/file.h
+   git commit -m "feat: short description of changes"
    ```
 
-3. **Test:**
+4. **Build & test:**
    ```bash
-   cd compiler && make clean && make
-   cd ../tests && bash run_tests.sh
+   cd compiler
+   cmake -S . -B build
+   cmake --build build --config Release
+   cd ../tests
+   # Linux/macOS
+   bash run_tests.sh ../compiler/build/urusc
+   # Windows
+   run_tests.bat ..\compiler\build\Release\urusc.exe
    ```
 
-4. **Push & create PR:**
+5. **Push & create PR:**
    ```bash
    git push -u origin feature/feature-name
-   # Create PR via GitHub/GitLab UI
+   # Create PR via GitHub UI targeting `dev` branch
    ```
 
 ### Commit Message Convention
@@ -94,12 +104,12 @@ main          ← stable, released versions
 
 | Type | Description |
 |------|-------------|
-| `Add` | New feature |
-| `Fix` | Bug fix |
-| `Update` | Changes to an existing feature |
-| `Refactor` | Internal changes without behavior change |
-| `Docs` | Documentation |
-| `Test` | New tests or test updates |
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation |
+| `refactor` | Internal changes without behavior change |
+| `test` | New tests or test updates |
+| `chore` | Build, CI, or tooling changes |
 
 ## Testing Guideline
 
@@ -107,13 +117,13 @@ main          ← stable, released versions
 
 ```
 tests/
-├── valid/       # Programs that must compile without errors
-├── invalid/     # Programs that must produce compile errors
-├── run/         # Programs that are compiled, run, and output checked
-│   ├── test.urus
-│   └── test.expected
-├── run_tests.sh   # Test runner (Linux/macOS)
-└── run_tests.bat  # Test runner (Windows)
++-- valid/       # Programs that must compile without errors
++-- invalid/     # Programs that must produce compile errors
++-- run/         # Programs that are compiled, run, and output checked
+|   +-- test.urus
+|   +-- test.expected
++-- run_tests.sh   # Test runner (Linux/macOS)
++-- run_tests.bat  # Test runner (Windows)
 ```
 
 ### Test Types
@@ -128,13 +138,11 @@ tests/
 
 **Valid test:**
 ```bash
-# Create a .urus file in tests/valid/
 echo 'fn main(): void { print("ok"); }' > tests/valid/new_test.urus
 ```
 
 **Invalid test:**
 ```bash
-# Create a .urus file that should produce an error
 echo 'fn main(): void { let x: int = "string"; }' > tests/invalid/type_error.urus
 ```
 
@@ -157,11 +165,20 @@ echo "expected output" > tests/run/new_test.expected
 cd tests/
 
 # Linux/macOS
-bash run_tests.sh ../compiler/urusc
+bash run_tests.sh ../compiler/build/urusc
 
 # Windows
-run_tests.bat ..\compiler\urusc.exe
+run_tests.bat ..\compiler\build\Release\urusc.exe
 ```
+
+### Current Test Results (V0.2/2(F))
+
+| Category | Count | Status |
+|----------|-------|--------|
+| Run tests | 10 | All PASS |
+| Example programs | 8 | All PASS |
+| Invalid file tests | 8 | All PASS |
+| CLI flags | 6 | All functional |
 
 ## How to Add a New Feature
 
@@ -174,20 +191,48 @@ run_tests.bat ..\compiler\urusc.exe
 5. **Sema** — Type-check in `sema.c`
 6. **Codegen** — Generate C code in `codegen.c`
 7. **Runtime** — Add runtime support in `urus_runtime.h` if needed
-8. **Test** — Add tests in `tests/`
+8. **Test** — Add tests in `tests/` (valid, invalid, and run)
 9. **Docs** — Update SPEC.md and documentation/
 10. **Example** — Add example in `examples/`
 
 ### Example: Adding the `**` (Power) Operator
 
 ```
-1. token.h    → TOK_POWER
-2. lexer.c    → recognize "**"
-3. ast.h      → (reuse NODE_BINARY, op = "**")
-4. parser.c   → add to precedence table
-5. sema.c     → type-check: numeric operands
-6. codegen.c  → emit pow(a, b)
-7. runtime    → (pow from math.h, already available)
-8. tests/     → valid/power.urus, run/power.urus + .expected
-9. SPEC.md    → add ** to operators
+1. token.h    -> TOK_POWER
+2. lexer.c    -> recognize "**"
+3. ast.h      -> (reuse NODE_BINARY, op = "**")
+4. parser.c   -> add to precedence table
+5. sema.c     -> type-check: numeric operands
+6. codegen.c  -> emit pow(a, b)
+7. runtime    -> (pow from math.h, already available)
+8. tests/     -> valid/power.urus, run/power.urus + .expected
+9. SPEC.md    -> add ** to operators
 ```
+
+## Build from Source
+
+### Prerequisites
+
+- GCC 8.0+ or compatible C compiler
+- CMake 3.10+
+
+### Steps
+
+```bash
+git clone https://github.com/Urus-Foundation/Urus.git
+cd Urus/compiler
+cmake -S . -B build
+cmake --build build --config Release
+
+# Verify
+./build/Release/urusc --version   # Windows
+./build/urusc --version           # Linux/macOS
+```
+
+## Debugging Tips
+
+- Use `--emit-c` to inspect generated C code
+- Use `--tokens` to debug lexer issues
+- Use `--ast` to debug parser issues
+- Check `_urus_tmp.c` if GCC compilation fails
+- On Windows, ensure GCC is installed (MSYS2 recommended)
