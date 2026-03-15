@@ -1,205 +1,134 @@
-# URUS Language Support for VS Code
+# URUS - Syntax Highlighting & Snippets
 
-Full language support for the [URUS programming language](https://github.com/Urus-Foundation/Urus) — a compiled language that transpiles to C.
+Full IDE-like support for the [URUS programming language](https://github.com/Urus-Foundation/Urus) in VS Code.
 
 ## Features
 
 ### Syntax Highlighting
+- Complete TextMate grammar: 23 keywords, 34 built-in functions, all operators
+- F-string interpolation `f"Hello {name}"` with expression highlighting
+- Enum variants `EnumName.Variant`, struct constructors, method calls
+- Type annotations, `Result<T, E>` generics, array types `[T]`
 
-Complete TextMate grammar covering all URUS language constructs:
+### IntelliSense
+- **Auto-complete** — keywords, types, built-in functions with snippet parameter insertion
+- **Context-aware** — suggests types after `:`, enum variants after `.`
+- **Signature Help** — parameter hints inside `()` for all built-in and user-defined functions
+- **Hover Tooltips** — documentation for all 34 built-ins, keywords, and types
 
-- **Keywords** — `fn`, `let`, `mut`, `struct`, `enum`, `import`, `if`, `else`, `while`, `for`, `in`, `return`, `break`, `continue`, `match`
-- **Types** — `int`, `float`, `bool`, `str`, `void`, `Result<T, E>`, `[T]` array types
-- **Built-in functions** — all 34 built-in functions with semantic grouping:
-  - I/O: `print`, `input`, `read_file`, `write_file`, `append_file`
-  - Array: `len`, `push`, `pop`
-  - String: `str_len`, `str_upper`, `str_lower`, `str_trim`, `str_contains`, `str_find`, `str_slice`, `str_replace`, `str_starts_with`, `str_ends_with`, `str_split`, `char_at`
-  - Conversion: `to_str`, `to_int`, `to_float`
-  - Math: `abs`, `fabs`, `sqrt`, `pow`, `min`, `max`, `fmin`, `fmax`
-  - Result: `is_ok`, `is_err`, `unwrap`, `unwrap_err`
-  - Utility: `exit`, `assert`
-- **Literals** — integers, floats, strings, booleans (`true`/`false`)
-- **String interpolation** — `f"Hello {name}"` with expression highlighting inside `{}`
-- **Enum variants** — `EnumName.Variant` and `EnumName.Variant(args)` patterns
-- **Struct constructors** — `StructName { field: value }`
-- **Method calls** — `obj.method()` and field access `obj.field`
-- **Operators** — arithmetic, comparison, logical, assignment, ranges (`..`, `..=`), match arrow (`=>`)
-- **Result constructors** — `Ok(value)` and `Err(message)`
-- **Comments** — single-line `//` and block `/* */` with nesting support
-- **Type annotations** — highlighted after `:` in variable and parameter declarations
+### Diagnostics
+- **Error squiggles** on file save — invokes the URUS compiler and shows errors inline
+- **Problems panel** integration — all errors and warnings in one place
+- Configurable via `urus.diagnostics.enable` setting
+
+### Commands
+| Command | Shortcut | Description |
+|---------|----------|-------------|
+| URUS: Build Current File | `Ctrl+Shift+B` | Compile to binary |
+| URUS: Build and Run | `Ctrl+F5` | Compile and execute in terminal |
+| URUS: Show Generated C Code | — | Open generated C in new tab |
+| URUS: Show Lexer Tokens | — | View tokenizer output |
+| URUS: Show AST | — | View abstract syntax tree |
+
+### Document Outline
+- **Outline view** — functions, structs, enums with fields/variants as children
+- **Breadcrumb navigation** — see your location in the file
+- **Go to Symbol** — `Ctrl+Shift+O` to jump to any declaration
+
+### Semantic Highlighting
+- Differentiates **mutable** vs **immutable** variables
+- Marks **built-in functions** differently from user functions
+- Highlights **declarations**, **parameters**, **enum members**, **properties**
+
+### Color Theme
+- **URUS Dark** — custom dark theme optimized for URUS syntax
+- Teal types, purple keywords, gold built-ins, green strings, red `mut`
 
 ### Code Snippets
+50+ snippets for all patterns — type a prefix and press Tab:
 
-50+ snippets for all common patterns:
-
-| Prefix | Description |
-|--------|-------------|
-| `main` | `fn main(): void { }` entry point |
-| `fn` | Function declaration |
-| `fnr` | Function with return statement |
-| `let` | Immutable variable |
-| `letm` | Mutable variable (`let mut`) |
-| `lets` | String variable |
-| `leta` | Array variable |
-| `if` | If statement |
-| `ife` | If-else statement |
+| Prefix | Expands to |
+|--------|------------|
+| `main` | `fn main(): void { }` |
+| `fn` / `fnr` | Function declaration / with return |
+| `let` / `letm` | Immutable / mutable variable |
+| `if` / `ife` | If / if-else |
+| `for` / `fori` / `fore` | For range / inclusive / each |
 | `while` | While loop |
-| `for` | For loop with exclusive range |
-| `fori` | For loop with inclusive range |
-| `fore` | For-each loop over array |
-| `struct` | Struct declaration |
-| `structi` | Struct instance creation |
-| `enum` | Enum (tagged union) declaration |
-| `match` | Match expression |
-| `arm` | Single match arm |
-| `fnresult` | Function returning `Result<T, E>` |
-| `ok` | `Ok(value)` |
-| `err` | `Err(message)` |
-| `isok` | Result check pattern with `is_ok`/`unwrap` |
+| `struct` / `structi` | Struct declaration / instance |
+| `enum` | Enum declaration |
+| `match` / `arm` | Match expression / arm |
+| `fnresult` / `ok` / `err` / `isok` | Result patterns |
 | `import` | Import module |
-| `print` | Print value |
-| `printf` | Print with f-string |
-| `input` | Read from stdin |
-| `readf` | Read file |
-| `writef` | Write file |
-| `appendf` | Append to file |
-| `f"` | F-string interpolation |
-| `slice` | String slice |
-| `split` | String split |
-| `replace` | String replace |
-| `push` | Array push |
-| `pop` | Array pop |
-| `len` | Array length |
-| `sqrt` | Square root |
-| `pow` | Power |
-| `tostr` | Convert to string |
-| `toint` | Convert to int |
-| `tofloat` | Convert to float |
-| `assert` | Assert with message |
-| `exit` | Exit with status code |
+| `print` / `printf` | Print / print with f-string |
+| `push` / `pop` / `len` | Array operations |
+| `tostr` / `toint` / `tofloat` | Type conversions |
 
 ### Editor Features
+- Bracket matching, auto-closing, colorized bracket pairs
+- Code folding for functions, structs, enums, control flow
+- Smart indentation and comment continuation
+- Status bar shows URUS compiler version
 
-- **Bracket matching** — `{}`, `[]`, `()`, `<>` (for generics)
-- **Auto-closing pairs** — brackets, parentheses, quotes, block comments
-- **Colorized bracket pairs** — nested brackets use different colors
-- **Smart indentation** — auto-indent after `{`, auto-outdent on `}`
-- **Code folding** — fold functions, structs, enums, control flow blocks
-- **Comment toggling** — `Ctrl+/` for line comments, `Ctrl+Shift+/` for block comments
-- **Auto-continue comments** — pressing Enter on a `//` comment line continues the comment
+## Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `urus.compilerPath` | `"urusc"` | Path to the URUS compiler |
+| `urus.buildArgs` | `[]` | Extra arguments for the compiler |
+| `urus.diagnostics.enable` | `true` | Enable error diagnostics |
+| `urus.diagnostics.onSave` | `true` | Run diagnostics on file save |
 
 ## Installation
 
-### Manual Install
-
-1. Copy the `vscode/` folder to your VS Code extensions directory:
-
-   **Linux / macOS:**
-   ```bash
-   cp -r editor-support/vscode ~/.vscode/extensions/urus-language
-   ```
-
-   **Windows (PowerShell):**
-   ```powershell
-   Copy-Item -Recurse editor-support\vscode "$env:USERPROFILE\.vscode\extensions\urus-language"
-   ```
-
-2. Restart VS Code (or reload: `Ctrl+Shift+P` > "Reload Window")
-
-3. Open any `.urus` file — syntax highlighting and snippets will activate automatically.
-
-### Install from VSIX
-
-If you have the `.vsix` package:
-
+### From VSIX
 ```bash
-code --install-extension urus-language-0.2.0.vsix
+code --install-extension urus-language-0.3.0.vsix
 ```
 
-Or in VS Code: `Ctrl+Shift+P` > "Extensions: Install from VSIX..."
+### Manual
+```bash
+# Linux / macOS
+cp -r editor-support/vscode ~/.vscode/extensions/urus-language
 
-### Build VSIX Package
+# Windows (PowerShell)
+Copy-Item -Recurse editor-support\vscode "$env:USERPROFILE\.vscode\extensions\urus-language"
+```
 
-To create a distributable `.vsix` file:
+Restart VS Code after installing.
 
+### Build from Source
 ```bash
 cd editor-support/vscode
-npm install -g @vscode/vsce
-vsce package
+npm install
+npm run compile
+npx vsce package
 ```
-
-This creates `urus-language-0.2.0.vsix`.
 
 ## File Structure
 
 ```
 vscode/
-├── icon.png                           # Extension icon
-├── language-configuration.json        # Brackets, comments, indentation, folding
-├── package.json                       # Extension manifest
-├── README.md                          # This file
-├── snippets/
-│   └── urus.code-snippets            # 50+ code snippets
-└── syntaxes/
-    └── urus.tmLanguage.json          # TextMate grammar (syntax highlighting)
+├── dist/extension.js              # Bundled extension code
+├── icon.png                       # Extension icon
+├── language-configuration.json    # Brackets, folding, indentation
+├── package.json                   # Extension manifest
+├── snippets/urus.code-snippets    # 50+ code snippets
+├── src/                           # TypeScript source
+│   ├── extension.ts               # Entry point
+│   ├── builtins.ts                # Built-in function database
+│   ├── commands.ts                # Build/Run/Emit commands
+│   ├── compiler.ts                # Compiler invocation
+│   ├── completion.ts              # Auto-complete provider
+│   ├── config.ts                  # Settings manager
+│   ├── diagnostics.ts             # Error diagnostics
+│   ├── hover.ts                   # Hover tooltips
+│   ├── semanticTokens.ts          # Semantic highlighting
+│   ├── signatureHelp.ts           # Parameter hints
+│   └── symbols.ts                 # Document outline
+├── syntaxes/urus.tmLanguage.json  # TextMate grammar
+└── themes/urus-dark-theme.json    # URUS Dark color theme
 ```
-
-## Example
-
-```urus
-import "math.urus";
-
-struct Point {
-    x: float;
-    y: float;
-}
-
-enum Shape {
-    Circle(radius: float);
-    Rectangle(w: float, h: float);
-    Point;
-}
-
-fn area(s: Shape): Result<float, str> {
-    match s {
-        Shape.Circle(r) => {
-            return Ok(3.14159 * r * r);
-        }
-        Shape.Rectangle(w, h) => {
-            return Ok(w * h);
-        }
-        Shape.Point => {
-            return Err("Point has no area");
-        }
-    }
-}
-
-fn main(): void {
-    let shapes: [Shape] = [
-        Shape.Circle(5.0),
-        Shape.Rectangle(3.0, 4.0),
-        Shape.Point
-    ];
-
-    for shape in shapes {
-        let result: Result<float, str> = area(shape);
-        if is_ok(result) {
-            print(f"Area: {unwrap(result)}");
-        } else {
-            print(f"Error: {unwrap_err(result)}");
-        }
-    }
-}
-```
-
-## Contributing
-
-Contributions are welcome! If you find a syntax highlighting issue or want to add features:
-
-1. Fork the [URUS repository](https://github.com/Urus-Foundation/Urus)
-2. Edit files in `editor-support/vscode/`
-3. Test by copying to your extensions directory
-4. Submit a PR targeting the `dev` branch
 
 ## Links
 
@@ -209,4 +138,4 @@ Contributions are welcome! If you find a syntax highlighting issue or want to ad
 
 ## License
 
-Apache 2.0 — same as the URUS project.
+Apache 2.0

@@ -64,8 +64,13 @@ ehthumbs.db
 
 # Package managers
 node_modules/
+package-lock.json
 .env
 .env.local
+
+# VS Code extension build
+editor-support/vscode/dist/
+editor-support/vscode/*.vsix
 
 # Docker
 *.pid

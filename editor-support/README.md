@@ -6,12 +6,12 @@ Syntax highlighting and language support for the URUS programming language.
 
 | Editor | Location | Features | Status |
 |--------|----------|----------|--------|
-| VS Code | `vscode/` | Syntax highlighting, 50+ snippets, bracket matching, folding, auto-indent | Ready |
+| VS Code | `vscode/` | Syntax highlighting, IntelliSense, diagnostics, commands, 50+ snippets, semantic tokens, dark theme | v0.3.0 |
 | Acode (Android) | `acode/` | Syntax highlighting | Ready |
 
 ## VS Code
 
-Full language support including syntax highlighting for all 23 keywords, 34 built-in functions, type annotations, f-string interpolation, enum variants, and 50+ code snippets.
+Full IDE-like support: syntax highlighting, auto-complete, hover tooltips, signature help, error diagnostics, build/run commands, document outline, semantic tokens, URUS Dark theme, and 50+ snippets.
 
 See [`vscode/README.md`](./vscode/README.md) for installation instructions.
 
