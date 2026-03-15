@@ -1,0 +1,32 @@
+{
+  "name": "urus-language",
+  "displayName": "URUS Language Support",
+  "description": "Syntax highlighting for the URUS programming language",
+  "version": "0.1.0",
+  "publisher": "urus-foundation",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": ["Programming Languages"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Urus-Foundation/Urus"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "urus",
+        "aliases": ["URUS", "urus"],
+        "extensions": [".urus"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "urus",
+        "scopeName": "source.urus",
+        "path": "./syntaxes/urus.tmLanguage.json"
+      }
+    ]
+  }
+}
