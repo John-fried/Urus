@@ -12,78 +12,40 @@
 #include <ctype.h>
 
 // ============================================================
-// RAII (runtime level)
+// RAII (utility)
 // ============================================================
 
-typedef void (*urus_dtor_fn)(void*);
-typedef struct {
-    void *ptr;
-    urus_dtor_fn dtor;
-} urus_temp_obj;
-
-static urus_temp_obj *_urus_pool = NULL;
-static int _urus_pool_count = 0;
-static int _urus_pool_cap = 0;
-
-static void urus_retain(void *ptr) {
-    if (ptr) {
-        int *rc = (int *)ptr;
-        (*rc)++;
-    }
-}
-
-static void *urus_autorelease(void *ptr, urus_dtor_fn dtor) {
-    if (dtor) {
-            if (_urus_pool_count >= _urus_pool_cap) {
-                _urus_pool_cap = (_urus_pool_cap == 0) ? 256 : _urus_pool_cap * 2;
-                _urus_pool = realloc(_urus_pool, _urus_pool_cap * sizeof(urus_temp_obj));
-            }
-            _urus_pool[_urus_pool_count].ptr = ptr;
-            _urus_pool[_urus_pool_count].dtor = dtor;
-            _urus_pool_count++;
-    }
-    return ptr;
-}
-
-static inline void urus_flush_pool(void) {
-    for (int i = 0; i<_urus_pool_count; i++) {
-        if (_urus_pool[i].dtor)
-            _urus_pool[i].dtor(_urus_pool[i].ptr);
-    }
-    _urus_pool_count = 0;
-}
-
-static void urus_release(void *ptr, urus_dtor_fn dtor) {
-    if (ptr) {
-        int *rc = (int *)ptr;
-        (*rc)--;
-        if (*rc <= 0) {
-            if (dtor) dtor(ptr);
-            free(ptr);
-        }
-    }
-}
+#if defined(__clang__) || defined(__GNUC__)
+    #define URUS_RAII(dtor) __attribute((cleanup(dtor)))
+#else
+    #define URUS_RAII(dtor)
+    #warning "__attribute(()) is not supported in your compiler. RAII is not gonna work."
+#endif
+#define URUS_MOVE(type, dest, src) do { dest = src; src = NULL; } while(0) // move semantic
+typedef void (*urus_drop_fn)(void*);
 
 // ============================================================
 // String (ref-counted)
 // ============================================================
 
 typedef struct {
-    int rc;
     size_t len;
     char data[];
 } urus_str;
 
-static void urus_str_retain(urus_str *s) { if (s) s->rc++; }
-static void urus_str_release(urus_str *s) { if (s && --s->rc <= 0) free(s); }
-
 static urus_str *urus_str_new(const char *s, size_t len) {
     urus_str *str = (urus_str *)malloc(sizeof(urus_str) + len + 1);
-    str->rc = 1;
     str->len = len;
     memcpy(str->data, s, len);
     str->data[len] = '\0';
-    return (urus_str *)urus_autorelease(str, (urus_dtor_fn)urus_str_release);
+    return str;
+}
+
+static void urus_str_drop(urus_str **sp) {
+    if (sp && *sp) {
+        free(*sp);
+        *sp = NULL;
+    }
 }
 
 static urus_str *urus_str_from(const char *s) {
@@ -93,12 +55,11 @@ static urus_str *urus_str_from(const char *s) {
 static urus_str *urus_str_concat(urus_str *a, urus_str *b) {
     size_t len = a->len + b->len;
     urus_str *str = (urus_str *)malloc(sizeof(urus_str) + len + 1);
-    str->rc = 1;
     str->len = len;
     memcpy(str->data, a->data, a->len);
     memcpy(str->data + a->len, b->data, b->len);
     str->data[len] = '\0';
-    return (urus_str *)urus_autorelease(str, (urus_dtor_fn)urus_str_release);
+    return str;
 }
 
 // ---- String stdlib ----
@@ -154,7 +115,6 @@ static urus_str *urus_str_replace(urus_str *s, urus_str *old, urus_str *new_s) {
     ptrdiff_t diff = (ptrdiff_t)new_s->len - (ptrdiff_t)old->len;
     size_t new_len = (size_t)((ptrdiff_t)s->len + count * diff);
     urus_str *r = (urus_str *)malloc(sizeof(urus_str) + new_len + 1);
-    r->rc = 1; r->len = new_len;
 
     char *dst = r->data;
     p = s->data;
@@ -166,7 +126,7 @@ static urus_str *urus_str_replace(urus_str *s, urus_str *old, urus_str *new_s) {
         p = q + old->len;
     }
     strcpy(dst, p);
-    return (urus_str *)urus_autorelease(r, (urus_dtor_fn)urus_str_release);
+    return r;
 }
 
 static bool urus_str_starts_with(urus_str *s, urus_str *prefix) {
@@ -189,21 +149,19 @@ static urus_str *urus_char_at(urus_str *s, int64_t i) {
 // ============================================================
 
 typedef struct {
-    int rc;
     size_t len;
     size_t cap;
     size_t elem_size;
-    urus_dtor_fn elem_dtor; // element destructor
+    urus_drop_fn elem_drop;
     void *data;
 } urus_array;
 
-static urus_array *urus_array_new(size_t elem_size, size_t initial_cap, urus_dtor_fn elem_dtor);
+static urus_array *urus_array_new(size_t elem_size, size_t initial_cap, urus_drop_fn elem_drop);
 static void urus_array_push(urus_array *arr, const void *elem);
-static void urus_array_release(urus_array *a);
 
 // Forward declare for str_split
 static urus_array *urus_str_split(urus_str *s, urus_str *delim) {
-    urus_array *arr = urus_array_new(sizeof(urus_str *), 4, (urus_dtor_fn)urus_str_release);
+    urus_array *arr = urus_array_new(sizeof(urus_str *), 4, (urus_drop_fn)urus_str_drop);
     if (delim->len == 0) {
         for (size_t i = 0; i < s->len; i++) {
             urus_str *c = urus_str_new(s->data + i, 1);
@@ -223,29 +181,28 @@ static urus_array *urus_str_split(urus_str *s, urus_str *delim) {
     return arr;
 }
 
-static urus_array *urus_array_new(size_t elem_size, size_t initial_cap, urus_dtor_fn elem_dtor) {
+static urus_array *urus_array_new(size_t elem_size, size_t initial_cap, urus_drop_fn elem_drop) {
     urus_array *arr = (urus_array *)malloc(sizeof(urus_array));
-    arr->rc = 1;
     arr->len = 0;
     arr->cap = initial_cap > 0 ? initial_cap : 4;
     arr->elem_size = elem_size;
-    arr->elem_dtor = elem_dtor;
+    arr->elem_drop = elem_drop;
     arr->data = malloc(arr->elem_size * arr->cap);
-    return (urus_array *)urus_autorelease(arr, (urus_dtor_fn)urus_array_release);
+    return arr;
 }
 
-static void urus_array_retain(urus_array *a) { if (a) a->rc++; }
-
-static void urus_array_release(urus_array *a) {
-    if (a->rc && --a->rc <= 0) {
-        if (a->elem_dtor) {
+static void urus_array_drop(urus_array **ap) {
+    if (ap && *ap) {
+        urus_array *a = *ap;
+        if (a->elem_drop) {
             for (size_t i = 0; i < a->len; i++) {
-                void *elem = *(void **)((char*)a->data + (i * a->elem_size));
-                urus_release(elem, a->elem_dtor);
+                void *obj = *(void**)((char*)a->data + (i * a->elem_size));
+                if (obj) a->elem_drop(&obj);
             }
         }
         free(a->data);
-        free(a); // free parent
+        free(a);
+        *ap = NULL;
     }
 }
 
@@ -256,12 +213,6 @@ static void urus_array_push(urus_array *arr, const void *elem) {
     }
     void *target = (char *)arr->data + (arr->len * arr->elem_size);
     memcpy(target, elem, arr->elem_size);
-
-    if (arr->elem_dtor) {
-        void *obj = (void **)elem;
-        urus_retain(obj);
-    }
-
     arr->len++;
 }
 
@@ -326,8 +277,7 @@ static urus_str *urus_bool_to_str(bool v) {
 }
 
 static urus_str *urus_str_to_str(urus_str *s) {
-    urus_str_retain(s);
-    return s;
+    return urus_str_new(s->data, s->len);
 }
 
 static int64_t urus_str_to_int(urus_str *s) { return strtoll(s->data, NULL, 10); }
@@ -446,7 +396,6 @@ typedef union {
 } urus_box;
 
 typedef struct {
-    int rc;
     int tag;  // 0 = Ok, 1 = Err
     union {
         urus_box ok;
@@ -456,19 +405,16 @@ typedef struct {
 
 static urus_result *urus_result_ok(urus_box *val) {
     urus_result *r = (urus_result *)malloc(sizeof(urus_result));
-    r->rc = 1;
     r->tag = 0;
     r->data.ok = *val;
-    return (urus_result *)urus_autorelease(r, (urus_dtor_fn)urus_str_release);
+    return r;
 }
 
 static urus_result *urus_result_err(urus_str *msg) {
     urus_result *r = (urus_result *)malloc(sizeof(urus_result));
-    r->rc = 1;
     r->tag = 1;
     r->data.err = msg;
-    urus_str_retain(msg);
-    return (urus_result *)urus_autorelease(r, (urus_dtor_fn)urus_str_release);
+    return r;
 }
 
 static bool urus_result_is_ok(urus_result *r) { return r->tag == 0; }
@@ -522,10 +468,15 @@ static urus_str *urus_result_unwrap_err(urus_result *r) {
     return r->data.err;
 }
 
-static void urus_result_release(urus_result *r) {
-    if (r && --r->rc <= 0) {
-        if (r->tag == 1 && r->data.err) urus_str_release(r->data.err);
+static void urus_result_drop(urus_result **rp) {
+    if (rp && *rp) {
+        urus_result *r = *rp;
+        if (r->tag == 1 && r->data.err) {
+            urus_str_drop(&r->data.err);
+        }
+        // TODO: if the OK result have a pointer heap, handle oK result here (drop for ok)
         free(r);
+        *rp = NULL;
     }
 }
 
