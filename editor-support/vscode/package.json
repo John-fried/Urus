@@ -1,16 +1,41 @@
 {
   "name": "urus-language",
-  "displayName": "URUS Language Support",
-  "description": "Syntax highlighting for the URUS programming language",
-  "version": "0.1.0",
-  "publisher": "urus-foundation",
+  "displayName": "URUS - Syntax Highlighting & Snippets",
+  "description": "Full language support for the URUS programming language — syntax highlighting, snippets, bracket matching, and more.",
+  "version": "0.2.0",
+  "publisher": "UrusFoundation",
+  "author": {
+    "name": "Urus Foundation",
+    "url": "https://github.com/Urus-Foundation"
+  },
+  "license": "Apache-2.0",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.60.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "urus",
+    "programming language",
+    "syntax highlighting",
+    "compiled language",
+    "transpiler",
+    "c-backend"
+  ],
+  "homepage": "https://github.com/Urus-Foundation/Urus",
   "repository": {
     "type": "git",
     "url": "https://github.com/Urus-Foundation/Urus"
+  },
+  "bugs": {
+    "url": "https://github.com/Urus-Foundation/Urus/issues"
+  },
+  "galleryBanner": {
+    "color": "#1a1a2e",
+    "theme": "dark"
   },
   "contributes": {
     "languages": [
@@ -18,7 +43,11 @@
         "id": "urus",
         "aliases": ["URUS", "urus"],
         "extensions": [".urus"],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icon.png",
+          "dark": "./icon.png"
+        }
       }
     ],
     "grammars": [
@@ -26,6 +55,12 @@
         "language": "urus",
         "scopeName": "source.urus",
         "path": "./syntaxes/urus.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "urus",
+        "path": "./snippets/urus.code-snippets"
       }
     ]
   }
