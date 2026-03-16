@@ -48,7 +48,7 @@ static void urus_str_drop(urus_str **sp) {
     }
 }
 
-static inline bool urus_str_equal(urus_str *a, urus_str *b) {
+static bool urus_str_equal(urus_str *a, urus_str *b) {
     if (a == b) return true; // compare address
     if (a->data== b->data) return true; // compare address
     if (a->len != b->len) return false;
