@@ -534,16 +534,6 @@ Apache License 2.0 — see [LICENSE](./LICENSE)
 
 ---
 
-<p align="center">
-  <img src="assets/urus-quote.jpg" alt="Urus Foundation" width="400" />
-  <br>
-  <em>"Urus nggak harus besar, yang penting konsisten."</em>
-  <br>
-  <em>"Urus doesn't have to be big, what matters is consistency."</em>
-</p>
-
----
-
 ## Contributors
 
 Thanks to everyone who has contributed to URUS!
