@@ -904,7 +904,24 @@ void codegen_generate(CodeBuf *buf, AstNode *program) {
     }
     emit(buf, "\n");
 
-    // Pass 3B: struct drop function
+    // Pass 3B: struct drop forward declarations
+    for (int i = 0; i < program->as.program.decl_count; i++) {
+        AstNode *d = program->as.program.decls[i];
+        if (d->kind == NODE_STRUCT_DECL) {
+            emit(buf, "static void %s_drop(%s **obj);\n", d->as.struct_decl.name, d->as.struct_decl.name);
+        }
+    }
+
+    // Pass 3C: enum drop forward declarations
+    for (int i = 0; i < program->as.program.decl_count; i++) {
+        AstNode *d = program->as.program.decls[i];
+        if (d->kind == NODE_ENUM_DECL) {
+            emit(buf, "static void %s_drop(%s **obj);\n", d->as.enum_decl.name, d->as.enum_decl.name);
+        }
+    }
+    emit(buf, "\n");
+
+    // Pass 3D: struct drop function
     for (int i = 0; i < program->as.program.decl_count; i++) {
         AstNode *d = program->as.program.decls[i];
         if (d->kind == NODE_STRUCT_DECL) {
@@ -928,7 +945,7 @@ void codegen_generate(CodeBuf *buf, AstNode *program) {
         }
     }
 
-    // Pass 3C: enum drop function
+    // Pass 3E: enum drop function
     for (int i = 0; i < program->as.program.decl_count; i++) {
         AstNode *d = program->as.program.decls[i];
         if (d->kind == NODE_ENUM_DECL) {
