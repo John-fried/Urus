@@ -556,6 +556,18 @@ static void gen_stmt(CodeBuf *buf, AstNode *node) {
             emit(buf, ", &(%s){", ctype);
             gen_expr(buf, node->as.assign_stmt.value);
             emit(buf, "});\n");
+        } else if (node->as.assign_stmt.op == TOK_PLUS_EQ &&
+                   node->as.assign_stmt.target->resolved_type &&
+                   node->as.assign_stmt.target->resolved_type->kind == TYPE_STR) {
+            // String +=: expand to target = urus_str_concat(target, value)
+            gen_expr_pre(buf, node->as.assign_stmt.value);
+            emit_indent(buf);
+            gen_expr(buf, node->as.assign_stmt.target);
+            emit(buf, " = urus_str_concat(");
+            gen_expr(buf, node->as.assign_stmt.target);
+            emit(buf, ", ");
+            gen_expr(buf, node->as.assign_stmt.value);
+            emit(buf, ");\n");
         } else {
             gen_expr_pre(buf, node->as.assign_stmt.value);
             emit_indent(buf);

@@ -1,0 +1,5 @@
+fn main(): void {
+    let mut s: str = "Hello";
+    s += " World";
+    print(s);
+}

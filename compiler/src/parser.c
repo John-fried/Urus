@@ -281,10 +281,19 @@ static AstNode *parse_primary(Parser *p) {
             }
             p->pos = saved;
         }
-        // Check for struct literal: Ident { field: val, ... }
+        // Check for struct literal: Ident { field: val, ... } or Ident {}
         if (check(p, TOK_LBRACE)) {
             int saved = p->pos;
             advance_tok(p); // skip {
+            // Empty struct literal: Ident {}
+            if (check(p, TOK_RBRACE)) {
+                advance_tok(p); // skip }
+                AstNode *n = ast_new(NODE_STRUCT_LIT, t);
+                n->as.struct_lit.name = name;
+                n->as.struct_lit.fields = NULL;
+                n->as.struct_lit.field_count = 0;
+                return n;
+            }
             if (check(p, TOK_IDENT)) {
                 int saved2 = p->pos;
                 advance_tok(p);

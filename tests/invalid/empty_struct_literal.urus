@@ -1,0 +1,7 @@
+struct Abc {
+    de: int;
+}
+
+fn main(): void {
+    let s: Abc = Abc{};
+}
