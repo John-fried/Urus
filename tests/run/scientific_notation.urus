@@ -1,0 +1,8 @@
+fn main(): void {
+    let a: float = 1e3;
+    let b: float = 3.14e2;
+    let c: float = 1.5e-1;
+    print(a);
+    print(b);
+    print(c);
+}

@@ -130,6 +130,39 @@ static AstNode *parse_fstring(Parser *p, Token t) {
 
     size_t i = 0;
     while (i < raw_len) {
+        // Escaped braces: {{ → literal {, }} → literal }
+        if (raw[i] == '{' && i + 1 < raw_len && raw[i + 1] == '{') {
+            // Collect literal text including escaped braces
+            size_t start = i;
+            while (i < raw_len) {
+                if (raw[i] == '{' && i + 1 < raw_len && raw[i + 1] == '{') { i += 2; continue; }
+                if (raw[i] == '}' && i + 1 < raw_len && raw[i + 1] == '}') { i += 2; continue; }
+                if (raw[i] == '{' || raw[i] == '}') break;
+                if (raw[i] == '\\' && i + 1 < raw_len) i++;
+                i++;
+            }
+            // Build the literal with escaped braces resolved
+            size_t seg_len = i - start;
+            char *buf = malloc(seg_len + 1);
+            size_t j = 0;
+            for (size_t k = start; k < i; k++) {
+                if (raw[k] == '{' && k + 1 < i && raw[k + 1] == '{') { buf[j++] = '{'; k++; }
+                else if (raw[k] == '}' && k + 1 < i && raw[k + 1] == '}') { buf[j++] = '}'; k++; }
+                else buf[j++] = raw[k];
+            }
+            buf[j] = '\0';
+            AstNode *lit = ast_new(NODE_STR_LIT, t);
+            lit->as.str_lit.value = buf;
+            if (!result) { result = lit; }
+            else {
+                AstNode *bin = ast_new(NODE_BINARY, t);
+                bin->as.binary.left = result;
+                bin->as.binary.op = TOK_PLUS;
+                bin->as.binary.right = lit;
+                result = bin;
+            }
+            continue;
+        }
         if (raw[i] == '{') {
             i++; // skip {
             // Find matching }
@@ -216,7 +249,13 @@ static AstNode *parse_primary(Parser *p) {
         AstNode *n = ast_new(NODE_INT_LIT, t);
         errno = 0;
         char *s = tok_num_str(t);
-        n->as.int_lit.value = strtoll(s, NULL, 10);
+        // Detect base from prefix
+        int base = 10;
+        char *num = s;
+        if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) { base = 16; num = s + 2; }
+        else if (s[0] == '0' && (s[1] == 'b' || s[1] == 'B')) { base = 2; num = s + 2; }
+        else if (s[0] == '0' && (s[1] == 'o' || s[1] == 'O')) { base = 8; num = s + 2; }
+        n->as.int_lit.value = strtoll(num, NULL, base);
         if (errno == ERANGE) {
             warn_at(p, t, "integer literal out of range");
         }
@@ -338,6 +377,8 @@ static AstNode *parse_primary(Parser *p) {
                     FieldInit *fields = malloc(sizeof(FieldInit) * (size_t)cap);
                     AstNode *spread = NULL;
                     do {
+                        // Trailing comma: allow } after comma
+                        if (check(p, TOK_RBRACE)) break;
                         // Check for spread: ..expr (must be last)
                         if (check(p, TOK_DOTDOT)) {
                             advance_tok(p); // skip ..

@@ -1,0 +1,6 @@
+fn main(): void {
+    let n: int = 42;
+    print(f"{{n}}");
+    print(f"{n}");
+    print(f"{{}}");
+}

@@ -116,7 +116,11 @@ static Token lex_fstring(Lexer *l) {
     int brace_depth = 0;
     while (l->pos < l->length) {
         char c = peek(l);
-        if (c == '{') {
+        if (c == '{' && peek_next(l) == '{') {
+            advance(l); advance(l); // skip escaped {{
+        } else if (c == '}' && peek_next(l) == '}') {
+            advance(l); advance(l); // skip escaped }}
+        } else if (c == '{') {
             brace_depth++;
             advance(l);
         } else if (c == '}') {
@@ -142,14 +146,47 @@ static Token lex_fstring(Lexer *l) {
     return make_token(l, TOK_FSTR_LIT, start, (size_t)(l->source + l->pos - start));
 }
 
+static int is_hex(char c) { return isdigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'); }
+
 static Token lex_number(Lexer *l) {
     const char *start = l->source + l->pos;
+
+    // Hex: 0x..., Binary: 0b..., Octal: 0o...
+    if (peek(l) == '0' && l->pos + 1 < l->length) {
+        char next = l->source[l->pos + 1];
+        if (next == 'x' || next == 'X') {
+            advance(l); advance(l); // skip 0x
+            while (is_hex(peek(l)) || (peek(l) == '_' && is_hex(peek_next(l)))) advance(l);
+            return make_token(l, TOK_INT_LIT, start, (size_t)(l->source + l->pos - start));
+        }
+        if (next == 'b' || next == 'B') {
+            advance(l); advance(l); // skip 0b
+            while (peek(l) == '0' || peek(l) == '1' || (peek(l) == '_' && (peek_next(l) == '0' || peek_next(l) == '1'))) advance(l);
+            return make_token(l, TOK_INT_LIT, start, (size_t)(l->source + l->pos - start));
+        }
+        if (next == 'o' || next == 'O') {
+            advance(l); advance(l); // skip 0o
+            while ((peek(l) >= '0' && peek(l) <= '7') || (peek(l) == '_' && peek_next(l) >= '0' && peek_next(l) <= '7')) advance(l);
+            return make_token(l, TOK_INT_LIT, start, (size_t)(l->source + l->pos - start));
+        }
+    }
+
     while (isdigit(peek(l)) || (peek(l) == '_' && isdigit(peek_next(l)))) advance(l);
     if (peek(l) == '.' && peek_next(l) != '.') {
         // '.' followed by '.' is range operator (e.g. 0..10), not float
         advance(l); // consume '.'
         while (isdigit(peek(l)) || (peek(l) == '_' && isdigit(peek_next(l)))) advance(l);
+    }
+    // Scientific notation: e/E followed by optional +/- and digits
+    if (peek(l) == 'e' || peek(l) == 'E') {
+        advance(l); // consume e/E
+        if (peek(l) == '+' || peek(l) == '-') advance(l);
+        while (isdigit(peek(l))) advance(l);
         return make_token(l, TOK_FLOAT_LIT, start, (size_t)(l->source + l->pos - start));
+    }
+    // Check if we consumed a '.' (float)
+    for (const char *p = start; p < l->source + l->pos; p++) {
+        if (*p == '.') return make_token(l, TOK_FLOAT_LIT, start, (size_t)(l->source + l->pos - start));
     }
     return make_token(l, TOK_INT_LIT, start, (size_t)(l->source + l->pos - start));
 }

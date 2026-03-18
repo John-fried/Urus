@@ -1,0 +1,8 @@
+fn main(): void {
+    let hex: int = 0xFF;
+    let bin: int = 0b1010;
+    let oct: int = 0o777;
+    print(hex);
+    print(bin);
+    print(oct);
+}
