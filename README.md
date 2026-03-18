@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-V0.2/2(F)-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-V0.2/3(A)-blue" alt="Version" />
   <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build" />
   <img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform" />
@@ -28,7 +28,7 @@
 
 ## Language Status
 
-URUS **V0.2/2(F) "Fixed"** is in active development. The core language syntax and features are functional. The project follows a custom versioning scheme: `V{major}.{minor}/{patch}`.
+URUS **V0.2/3(A) "Added"** is in active development. The core language syntax and features are functional. The project follows a custom versioning scheme: `V{major}.{minor}/{patch}`.
 
 ---
 
@@ -41,6 +41,8 @@ URUS **V0.2/2(F) "Fixed"** is in active development. The core language syntax an
 | **Faster than Python** | Compiles to native binary via C11 |
 | **More portable than Go** | Transpiles to standard C11 — runs anywhere GCC runs |
 | **Modern syntax** | Enums, pattern matching, string interpolation, Result type |
+
+> Note: URUS is starting to slowly move to **RAII** than **Reference counting** for more efficient & faster
 
 ---
 
@@ -395,7 +397,7 @@ Source (.urus)
 
 | Metric | Value |
 |--------|-------|
-| Version | V0.2/2(F) "Fixed" |
+| Version | V0.2/3(A) "Added" |
 | Compiler Size | ~464 KB (standalone, runtime embedded) |
 | Runtime | ~16 KB header-only (embedded in binary) |
 | Compiler LOC | ~4,700+ |
