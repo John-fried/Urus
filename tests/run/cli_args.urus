@@ -1,0 +1,6 @@
+fn main(argc: int, argv: [str]): void {
+    print(f"argc={argc}");
+    for i in 0..argc {
+        print(f"argv[{i}]={argv[i]}");
+    }
+}

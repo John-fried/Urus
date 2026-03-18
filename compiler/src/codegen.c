@@ -987,11 +987,35 @@ void codegen_generate(CodeBuf *buf, AstNode *program) {
         }
     }
 
-    // C main wrapper
-    emit(buf,
-        "int main() {\n"
-        "   urus_main();\n"
-        "   return 0;\n"
-        "}\n"
-    );
+    // C main wrapper — check if urus main accepts argc/argv
+    bool main_has_args = false;
+    for (int i = 0; i < program->as.program.decl_count; i++) {
+        AstNode *d = program->as.program.decls[i];
+        if (d->kind == NODE_FN_DECL && strcmp(d->as.fn_decl.name, "main") == 0) {
+            main_has_args = d->as.fn_decl.param_count >= 2;
+            break;
+        }
+    }
+
+    if (main_has_args) {
+        emit(buf,
+            "int main(int argc, char **argv) {\n"
+            "   urus_array *_urus_argv = urus_array_new(sizeof(urus_str *), (size_t)argc, (urus_drop_fn)urus_str_drop);\n"
+            "   for (int i = 0; i < argc; i++) {\n"
+            "       urus_str *s = urus_str_from(argv[i]);\n"
+            "       urus_array_push(_urus_argv, &s);\n"
+            "   }\n"
+            "   urus_main((int64_t)argc, _urus_argv);\n"
+            "   urus_array_drop(&_urus_argv);\n"
+            "   return 0;\n"
+            "}\n"
+        );
+    } else {
+        emit(buf,
+            "int main() {\n"
+            "   urus_main();\n"
+            "   return 0;\n"
+            "}\n"
+        );
+    }
 }

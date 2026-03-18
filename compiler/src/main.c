@@ -195,8 +195,11 @@ static void print_tokens(Token *tokens, int count) {
 static void show_help(char *progname) {
     printf(
         "URUS Compiler, version "URUS_COMPILER_VERSION"\n"
-        "usage: %s [options] file\n\n"
+        "usage: %s [command] [options] file\n\n"
         "Rust-like safety with Python-like simplicity, transpiling to C11\n\n"
+        "Commands:\n"
+        "  build       Compile source file (default)\n"
+        "  run         Compile and run immediately\n\n"
         "Options:\n"
         "  --help      Show help message\n"
         "  --version   Show compiler message\n"
@@ -209,8 +212,10 @@ static void show_help(char *progname) {
 #else
         "a.out)\n\n"
 #endif
-        "Example:\n"
-        "  %s main.urus -o app \n", progname, progname
+        "Examples:\n"
+        "  %s main.urus -o app\n"
+        "  %s build main.urus -o app\n"
+        "  %s run main.urus\n", progname, progname, progname, progname
     );
 }
 
@@ -235,9 +240,19 @@ int main(int argc, char **argv) {
     bool show_tokens = false;
     bool show_ast = false;
     bool emit_c = false;
+    bool run_after = false;
     const char *output = NULL;
 
-    for (int i = 1; i < argc; i++) {
+    int arg_start = 1;
+    // Check for subcommand
+    if (argc >= 2 && strcmp(argv[1], "run") == 0) {
+        run_after = true;
+        arg_start = 2;
+    } else if (argc >= 2 && strcmp(argv[1], "build") == 0) {
+        arg_start = 2;
+    }
+
+    for (int i = arg_start; i < argc; i++) {
         if (argv[i][0] == '-') {
             if ((strcmp(argv[i], "--help") == 0) || (strcmp(argv[i], "-h") == 0)) {
                 show_help(argv[0]);
@@ -257,7 +272,6 @@ int main(int argc, char **argv) {
             }
         }
         else {
-            // TODO: Create support for files... input array,  by making objects before compilation
             path = argv[i];
         }
     }
@@ -336,10 +350,11 @@ int main(int argc, char **argv) {
     } else {
         const char *c_path = "_urus_tmp.c";
 #ifdef _WIN32
-        const char *out_path = output ? output : "a.exe";
+        const char *default_out = run_after ? "_urus_run.exe" : "a.exe";
 #else
-        const char *out_path = output ? output : "a.out";
+        const char *default_out = run_after ? "_urus_run" : "a.out";
 #endif
+        const char *out_path = output ? output : default_out;
 
         FILE *f = fopen(c_path, "wb");
         if (!f) {
@@ -412,6 +427,26 @@ int main(int argc, char **argv) {
             free(source);
             return 1;
         }
+
+        if (run_after) {
+            // Execute the compiled binary
+            codegen_free(&cbuf);
+            ast_free(program);
+            free(tokens);
+            free(source);
+
+#ifdef _WIN32
+            int run_ret = (int)_spawnl(_P_WAIT, out_path, out_path, NULL);
+#else
+            char run_cmd[8192];
+            snprintf(run_cmd, sizeof(run_cmd), "./%s", out_path);
+            int run_ret = system(run_cmd);
+#endif
+            // Clean up temporary binary if no -o was specified
+            if (!output) remove(out_path);
+            return run_ret;
+        }
+
         printf("Output: %s\n", out_path);
     }
 

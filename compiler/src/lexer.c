@@ -195,9 +195,11 @@ Token lexer_next(Lexer *l) {
     case ';': return make_token(l, TOK_SEMICOLON, start, 1);
     case '%': return make_token(l, TOK_PERCENT, start, 1);
     case '+':
+        if (peek(l) == '+') { advance(l); return make_token(l, TOK_PLUSPLUS, start, 2); }
         if (peek(l) == '=') { advance(l); return make_token(l, TOK_PLUS_EQ, start, 2); }
         return make_token(l, TOK_PLUS, start, 1);
     case '-':
+        if (peek(l) == '-') { advance(l); return make_token(l, TOK_MINUSMINUS, start, 2); }
         if (peek(l) == '=') { advance(l); return make_token(l, TOK_MINUS_EQ, start, 2); }
         return make_token(l, TOK_MINUS, start, 1);
     case '*':
@@ -313,6 +315,8 @@ const char *token_type_name(TokenType type) {
     case TOK_MINUS_EQ: return "MINUS_EQ";
     case TOK_STAR_EQ: return "STAR_EQ";
     case TOK_SLASH_EQ: return "SLASH_EQ";
+    case TOK_PLUSPLUS: return "PLUSPLUS";
+    case TOK_MINUSMINUS: return "MINUSMINUS";
     case TOK_DOTDOT: return "DOTDOT";
     case TOK_DOTDOTEQ: return "DOTDOTEQ";
     case TOK_LPAREN: return "LPAREN";

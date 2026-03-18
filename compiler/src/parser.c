@@ -699,7 +699,35 @@ static AstNode *parse_statement(Parser *p) {
         return ast_new(NODE_CONTINUE_STMT, previous(p));
     }
 
+    // Prefix increment/decrement: ++x; or --x;
+    if (check(p, TOK_PLUSPLUS) || check(p, TOK_MINUSMINUS)) {
+        Token op = advance_tok(p);
+        AstNode *target = parse_expr(p);
+        expect(p, TOK_SEMICOLON, "expected ';' after increment/decrement");
+        AstNode *one = ast_new(NODE_INT_LIT, op);
+        one->as.int_lit.value = 1;
+        AstNode *n = ast_new(NODE_ASSIGN_STMT, op);
+        n->as.assign_stmt.target = target;
+        n->as.assign_stmt.op = (op.type == TOK_PLUSPLUS) ? TOK_PLUS_EQ : TOK_MINUS_EQ;
+        n->as.assign_stmt.value = one;
+        return n;
+    }
+
     AstNode *expr = parse_expr(p);
+
+    // Postfix increment/decrement: x++; or x--;
+    if (is_lvalue(expr) && (check(p, TOK_PLUSPLUS) || check(p, TOK_MINUSMINUS))) {
+        Token op = advance_tok(p);
+        expect(p, TOK_SEMICOLON, "expected ';' after increment/decrement");
+        AstNode *one = ast_new(NODE_INT_LIT, op);
+        one->as.int_lit.value = 1;
+        AstNode *n = ast_new(NODE_ASSIGN_STMT, op);
+        n->as.assign_stmt.target = expr;
+        n->as.assign_stmt.op = (op.type == TOK_PLUSPLUS) ? TOK_PLUS_EQ : TOK_MINUS_EQ;
+        n->as.assign_stmt.value = one;
+        return n;
+    }
+
     if (is_lvalue(expr) && is_assign_op(current(p).type)) {
         Token op = advance_tok(p);
         AstNode *value = parse_expr(p);

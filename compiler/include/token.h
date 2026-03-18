@@ -61,6 +61,8 @@ typedef enum {
     TOK_MINUS_EQ,   // -=
     TOK_STAR_EQ,    // *=
     TOK_SLASH_EQ,   // /=
+    TOK_PLUSPLUS,    // ++
+    TOK_MINUSMINUS, // --
     TOK_DOTDOT,     // ..
     TOK_DOTDOTEQ,   // ..=
     TOK_ARROW,      // =>
