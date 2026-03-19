@@ -1180,6 +1180,8 @@ static AstNode *parse_rune_decl(Parser *p) {
         memcpy(rune_defs[rune_count].body_tokens, body, sizeof(Token) * (size_t)bcount);
         rune_defs[rune_count].body_token_count = bcount;
         rune_count++;
+    } else {
+        error_at(p, rune_tok, "maximum number of runes exceeded (64)");
     }
 
     AstNode *n = ast_new(NODE_RUNE_DECL, rune_tok);
