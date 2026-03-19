@@ -390,7 +390,11 @@ static AstNode *parse_primary(Parser *p) {
                     expect(p, TOK_RPAREN, "expected ')' after rune arguments");
 
                     if (arg_count != rune->param_count) {
-                        error_at(p, t, "rune expects different number of arguments");
+                    {
+                        char msg[128];
+                        snprintf(msg, sizeof(msg), "rune '%s' expects %d arguments, got %d", rune->name, rune->param_count, arg_count);
+                        error_at(p, t, msg);
+                    }
                         free(arg_tokens); free(arg_lens); free(name);
                         return ast_new(NODE_INT_LIT, t);
                     }
