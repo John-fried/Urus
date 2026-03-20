@@ -3,6 +3,8 @@ rune add(a, b) { a + b }
 rune double_it(x) { x + x }
 rune cube(x) { x * x * x }
 rune sum3(a, b, c) { a + b + c }
+rune max(a, b) { if a > b { a } else { b } }
+rune min(a, b) { if a < b { a } else { b } }
 
 fn main(): void {
     print(square!(5));
@@ -17,4 +19,7 @@ fn main(): void {
 
     let y: int = add!(square!(3), 1);
     print(y);
+
+    print(max!(10, 20));
+    print(min!(10, 20));
 }

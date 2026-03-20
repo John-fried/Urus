@@ -426,6 +426,13 @@ void ast_print(AstNode *node, int ind) {
             ast_print(node->as.tuple_lit.elements[i], ind + 1);
         break;
 
+    case NODE_IF_EXPR:
+        printf("IfExpr\n");
+        ast_print(node->as.if_expr.condition, ind + 1);
+        ast_print(node->as.if_expr.then_expr, ind + 1);
+        ast_print(node->as.if_expr.else_expr, ind + 1);
+        break;
+
     case NODE_RUNE_DECL:
         printf("RuneDecl '%s' (%d params, %d body tokens)\n",
                node->as.rune_decl.name, node->as.rune_decl.param_count,
@@ -617,6 +624,11 @@ void ast_free(AstNode *node) {
         for (int i = 0; i < node->as.tuple_lit.count; i++)
             ast_free(node->as.tuple_lit.elements[i]);
         free(node->as.tuple_lit.elements);
+        break;
+    case NODE_IF_EXPR:
+        ast_free(node->as.if_expr.condition);
+        ast_free(node->as.if_expr.then_expr);
+        ast_free(node->as.if_expr.else_expr);
         break;
     case NODE_RUNE_DECL:
         free(node->as.rune_decl.name);

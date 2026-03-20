@@ -472,6 +472,13 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
         return set_type(node, ast_type_tuple(elem_types, count));
     }
 
+    case NODE_IF_EXPR: {
+        check_expr(ctx, node->as.if_expr.condition);
+        AstType *then_t = check_expr(ctx, node->as.if_expr.then_expr);
+        check_expr(ctx, node->as.if_expr.else_expr);
+        return set_type(node, then_t ? ast_type_clone(then_t) : ast_type_simple(TYPE_VOID));
+    }
+
     default:
         return set_type(node, ast_type_simple(TYPE_VOID));
     }

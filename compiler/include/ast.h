@@ -77,6 +77,7 @@ typedef enum {
     NODE_ERR_EXPR,    // Err(value)
     NODE_LAMBDA,      // |params| -> type { body }
     NODE_TUPLE_LIT,   // (expr1, expr2, ...)
+    NODE_IF_EXPR,     // if cond { expr } else { expr } (expression context)
     NODE_RUNE_DECL,   // rune name(params) { body }
 } NodeKind;
 
@@ -160,6 +161,13 @@ struct AstNode {
             AstNode *then_block;
             AstNode *else_branch; // block or another if_stmt, or NULL
         } if_stmt;
+
+        // NODE_IF_EXPR (ternary-like: if cond { expr } else { expr })
+        struct {
+            AstNode *condition;
+            AstNode *then_expr;
+            AstNode *else_expr;
+        } if_expr;
 
         // NODE_WHILE_STMT
         struct { AstNode *condition; AstNode *body; } while_stmt;

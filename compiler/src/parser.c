@@ -620,6 +620,23 @@ static AstNode *parse_primary(Parser *p) {
         return first;
     }
 
+    // if-expression: if cond { expr } else { expr }
+    if (match(p, TOK_IF)) {
+        AstNode *cond = parse_expr(p);
+        expect(p, TOK_LBRACE, "expected '{' after if condition");
+        AstNode *then_expr = parse_expr(p);
+        expect(p, TOK_RBRACE, "expected '}' after then expression");
+        expect(p, TOK_ELSE, "expected 'else' in if-expression");
+        expect(p, TOK_LBRACE, "expected '{' after else");
+        AstNode *else_expr = parse_expr(p);
+        expect(p, TOK_RBRACE, "expected '}' after else expression");
+        AstNode *n = ast_new(NODE_IF_EXPR, t);
+        n->as.if_expr.condition = cond;
+        n->as.if_expr.then_expr = then_expr;
+        n->as.if_expr.else_expr = else_expr;
+        return n;
+    }
+
     error_at(p, t, "expected expression");
     return ast_new(NODE_INT_LIT, t);
 }

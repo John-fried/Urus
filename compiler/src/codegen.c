@@ -592,6 +592,15 @@ static void gen_expr(CodeBuf *buf, AstNode *node) {
     case NODE_ERR_EXPR:
         emit(buf, "_urus_res_%d", node->_codegen_tmp);
         break;
+    case NODE_IF_EXPR:
+        emit(buf, "(");
+        gen_expr(buf, node->as.if_expr.condition);
+        emit(buf, " ? ");
+        gen_expr(buf, node->as.if_expr.then_expr);
+        emit(buf, " : ");
+        gen_expr(buf, node->as.if_expr.else_expr);
+        emit(buf, ")");
+        break;
     default:
         emit(buf, "/* unsupported expr */0");
         break;
@@ -759,6 +768,11 @@ static int gen_expr_pre(CodeBuf *buf, AstNode *node) {
         emit(buf, " };\n");
         return tmp;
     }
+    case NODE_IF_EXPR:
+        gen_expr_pre(buf, node->as.if_expr.condition);
+        gen_expr_pre(buf, node->as.if_expr.then_expr);
+        gen_expr_pre(buf, node->as.if_expr.else_expr);
+        return -1;
     default:
         return -1;
     }
