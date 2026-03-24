@@ -1,0 +1,21 @@
+fn main(): void {
+    let s: str = "  Hello, World!  ";
+
+    // Method syntax
+    print(s.trim());
+    print(s.trim().upper());
+    print(s.trim().lower());
+    print(to_str(s.trim().len()));
+
+    let name: str = "hello world";
+    print(to_str(name.contains("world")));
+    print(to_str(name.find("world")));
+    print(name.slice(0, 5));
+    print(name.replace("world", "urus"));
+    print(to_str(name.starts_with("hello")));
+    print(to_str(name.ends_with("world")));
+
+    // Chaining
+    let result: str = "  URUS Language  ".trim().lower();
+    print(result);
+}

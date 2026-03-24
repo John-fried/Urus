@@ -186,10 +186,14 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
             const char *method = node->as.call.callee->as.field_access.field;
             AstType *obj_type = check_expr(ctx, obj);
 
-            if (obj_type && obj_type->kind == TYPE_NAMED) {
-                // Look for StructName_method
+            if (obj_type && (obj_type->kind == TYPE_NAMED || obj_type->kind == TYPE_STR)) {
+                // Build the function name: StructName_method or str_method
                 char fn_name_buf[256];
-                snprintf(fn_name_buf, sizeof(fn_name_buf), "%s_%s", obj_type->name, method);
+                if (obj_type->kind == TYPE_STR) {
+                    snprintf(fn_name_buf, sizeof(fn_name_buf), "str_%s", method);
+                } else {
+                    snprintf(fn_name_buf, sizeof(fn_name_buf), "%s_%s", obj_type->name, method);
+                }
                 SemaSymbol *method_sym = scope_lookup(ctx->current, fn_name_buf);
 
                 if (method_sym && method_sym->is_fn) {
@@ -208,7 +212,7 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
                     // Fall through to normal call checking below
                 } else {
                     sema_error(ctx, &node->tok, "no method '%s' on type '%s'",
-                               method, obj_type->name);
+                               method, obj_type->kind == TYPE_STR ? "str" : obj_type->name);
                     for (int i = 0; i < node->as.call.arg_count; i++)
                         check_expr(ctx, node->as.call.args[i]);
                     return set_type(node, ast_type_simple(TYPE_VOID));
