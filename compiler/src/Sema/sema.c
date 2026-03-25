@@ -918,6 +918,7 @@ static void check_block(SemaCtx *ctx, AstNode *node) {
 bool sema_analyze(AstNode *program, const char *filename) {
     SemaCtx ctx = {0};
     SemaScope *global = scope_new(NULL);
+    ctx.current_fn_name = "";
     ctx.filename = filename;
     ctx.current = global;
 
