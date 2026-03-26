@@ -53,7 +53,7 @@ static AstType *sema_resolve_type(SemaCtx *ctx, AstType *t) {
     if (!t) return t;
     if (t->kind == TYPE_NAMED) {
         SemaSymbol *sym = scope_lookup(ctx->current, t->name);
-        if (sym && sym->is_type_alias) {
+        if (sym && sym->tag == TYPE_SYM_TAG) {
             return ast_type_clone(sym->alias_type);
         }
     }
@@ -105,7 +105,7 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
 
     case NODE_IDENT: {
         SemaSymbol *sym = scope_lookup(ctx->current, node->as.ident.name);
-        if (!sym || (sym->is_fn || sym->is_enum || sym->is_struct)) {
+        if (!sym || (sym->tag == FN_SYM_TAG || sym->tag == ENUM_SYM_TAG || sym->tag == STRUCT_SYM_TAG)) {
             sema_error(ctx, &node->tok, "undefined variable '%s'", node->as.ident.name);
             return set_type(node, ast_type_simple(TYPE_VOID));
         }
@@ -231,7 +231,7 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
                 }
                 SemaSymbol *method_sym = scope_lookup(ctx->current, fn_name_buf);
 
-                if (method_sym && method_sym->is_fn) {
+                if (method_sym && method_sym->tag == FN_SYM_TAG) {
                     // Rewrite: change callee to ident, prepend obj as first arg
                     node->as.call.callee->kind = NODE_IDENT;
                     node->as.call.callee->as.ident.name = strdup(fn_name_buf);
@@ -278,7 +278,7 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
                 check_expr(ctx, node->as.call.args[i]);
             return set_type(node, ast_type_simple(TYPE_VOID));
         }
-        if (!sym->is_fn) {
+        if (sym->tag != FN_SYM_TAG) {
             sema_error(ctx, &node->as.call.callee->tok, "'%s' is not a function", fn_name);
             for (int i = 0; i < node->as.call.arg_count; i++)
                 check_expr(ctx, node->as.call.args[i]);
@@ -377,8 +377,8 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
             return set_type(node, ast_type_simple(TYPE_VOID));
         }
         SemaSymbol *st = scope_lookup(ctx->current, obj_type->name);
-        if (!st || !st->is_struct) {
-            if (!st->is_struct) {
+        if (!st || st->tag != STRUCT_SYM_TAG) {
+            if (st->tag != STRUCT_SYM_TAG) {
                 sema_error(ctx, &node->tok, "'%s' is not struct", obj_type->name);
             } else {
                 sema_error(ctx, &node->tok, "unknown struct '%s'", obj_type->name);
@@ -428,7 +428,7 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
     case NODE_STRUCT_LIT: {
         const char *name = node->as.struct_lit.name;
         SemaSymbol *st = scope_lookup(ctx->current, name);
-        if (!st || !st->is_struct) {
+        if (!st || st->tag != STRUCT_SYM_TAG) {
             sema_error(ctx, &node->tok, "unknown struct '%s'", name);
             for (int i = 0; i < node->as.struct_lit.field_count; i++)
                 check_expr(ctx, node->as.struct_lit.fields[i].value);
@@ -481,8 +481,8 @@ static AstType *check_expr(SemaCtx *ctx, AstNode *node) {
     case NODE_ENUM_INIT: {
         const char *ename = node->as.enum_init.enum_name;
         SemaSymbol *sym = scope_lookup(ctx->current, ename);
-        if (!sym || !sym->is_enum) {
-            if (!sym->is_enum) {
+        if (!sym || sym->tag != ENUM_SYM_TAG) {
+            if (sym->tag != ENUM_SYM_TAG) {
                 sema_error(ctx, &node->tok, "'%s' is not enum", ename);
             } else {
                 sema_error(ctx, &node->tok, "unknown enum '%s'", ename);
@@ -624,7 +624,7 @@ static void check_stmt(SemaCtx *ctx, AstNode *node) {
 
         if (node->as.assign_stmt.target->kind == NODE_IDENT) {
             SemaSymbol *sym = scope_lookup(ctx->current, node->as.assign_stmt.target->as.ident.name);
-            if (sym && !sym->is_mut && !sym->is_fn) {
+            if (sym && !sym->is_mut && sym->tag != FN_SYM_TAG) {
                 sema_error(ctx, &node->as.assign_stmt.value->tok, "cannot assign to immutable variable '%s'",
                            node->as.assign_stmt.target->as.ident.name);
             }
@@ -828,7 +828,7 @@ static void check_stmt(SemaCtx *ctx, AstNode *node) {
         } else if (target_type->kind == TYPE_NAMED) {
             // Enum match
             SemaSymbol *enum_sym = scope_lookup(ctx->current, target_type->name);
-            if (!enum_sym || !enum_sym->is_enum) {
+            if (!enum_sym || enum_sym->tag != ENUM_SYM_TAG) {
                 sema_error(ctx, &node->as.match_stmt.target->tok,
                            "match target type '%s' is not an enum", target_type->name);
                 break;
@@ -896,9 +896,9 @@ static void check_unused_symbols(SemaCtx *ctx, SemaScope *s) {
         if (!sym->is_imported && sym->name[0] != '_' && strcmp(sym->name, "main") != 0 &&
                 !sym->is_builtin && !sym->is_referenced) {
             char *type = "variable";
-            if (sym->is_fn) type = "function";
-            else if (sym->is_struct) type = "struct";
-            else if (sym->is_enum) type = "enum";
+            if (sym->tag == FN_SYM_TAG) type = "function";
+            else if (sym->tag == STRUCT_SYM_TAG) type = "struct";
+            else if (sym->tag == ENUM_SYM_TAG) type = "enum";
 
             sema_warn(ctx, &sym->tok, "unused %s '%s'", type, sym->name);
         }
@@ -936,7 +936,7 @@ bool sema_analyze(AstNode *program, const char *filename) {
                 continue;
             }
             SemaSymbol *s = scope_add(global, d->as.struct_decl.name, d->tok);
-            s->is_struct = true;
+            s->tag = STRUCT_SYM_TAG;
             s->is_imported = d->is_imported;
             s->fields = d->as.struct_decl.fields;
             s->field_count = d->as.struct_decl.field_count;
@@ -947,7 +947,7 @@ bool sema_analyze(AstNode *program, const char *filename) {
                 continue;
             }
             SemaSymbol *s = scope_add(global, d->as.enum_decl.name, d->tok);
-            s->is_enum = true;
+            s->tag = ENUM_SYM_TAG;
             s->is_imported = d->is_imported;
             s->variants = d->as.enum_decl.variants;
             s->variant_count = d->as.enum_decl.variant_count;
@@ -964,7 +964,7 @@ bool sema_analyze(AstNode *program, const char *filename) {
                 continue;
             }
             SemaSymbol *s = scope_add(global, d->as.fn_decl.name, d->tok);
-            s->is_fn = true;
+            s->tag = FN_SYM_TAG;
             s->is_imported = d->is_imported;
             s->params = d->as.fn_decl.params;
             s->param_count = d->as.fn_decl.param_count;
@@ -995,7 +995,7 @@ bool sema_analyze(AstNode *program, const char *filename) {
                 continue;
             }
             SemaSymbol *s = scope_add(global, d->as.type_alias.name, d->tok);
-            s->is_type_alias = true;
+            s->tag = TYPE_SYM_TAG;
             s->is_imported = d->is_imported;
             s->alias_type = d->as.type_alias.type;
             s->type = d->as.type_alias.type;
@@ -1007,9 +1007,9 @@ bool sema_analyze(AstNode *program, const char *filename) {
     // When a TYPE_NAMED references a type alias, replace it with the aliased type
     for (int i = 0; i < global->count; i++) {
         SemaSymbol *s = &global->syms[i];
-        if (s->is_type_alias && s->alias_type && s->alias_type->kind == TYPE_NAMED) {
+        if (s->tag == TYPE_SYM_TAG && s->alias_type && s->alias_type->kind == TYPE_NAMED) {
             SemaSymbol *target = scope_lookup(global, s->alias_type->name);
-            if (target && target->is_type_alias) {
+            if (target && target->tag == TYPE_SYM_TAG) {
                 s->alias_type = target->alias_type;
                 s->type = target->alias_type;
             }

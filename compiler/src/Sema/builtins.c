@@ -6,7 +6,7 @@
 static void add_builtin(SemaScope *global, const char *name, AstType *ret,
                         int nparams, ...) {
     SemaSymbol *s = scope_add(global, name, (Token){0});
-    s->is_fn = true;
+    s->tag = FN_SYM_TAG;
     s->is_builtin = true;
     s->param_count = nparams;
     s->return_type = ret;

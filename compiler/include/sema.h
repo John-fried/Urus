@@ -2,27 +2,40 @@
 #define URUS_SEMA_H
 
 #include "ast.h"
+#include <stdint.h>
 #include <stdbool.h>
+
+enum {
+    FN_SYM_TAG = 1,
+    STRUCT_SYM_TAG,
+    ENUM_SYM_TAG,
+    TYPE_SYM_TAG
+};
 
 typedef struct {
     char *name;
     AstType *type;
     Token tok; // For error tracking
+    uint8_t tag;
     bool is_mut;
-    bool is_fn;
     bool is_referenced;
     bool is_imported; // prevent unused warning on imported decl
     bool is_builtin; // prevent unused warning on builtin function/variable
+ 
+    // function
     Param *params;
     int param_count;
     AstType *return_type;
-    bool is_struct;
+
+    // struct
     Param *fields;
     int field_count;
-    bool is_enum;
+
+    // enum
     EnumVariant *variants;
     int variant_count;
-    bool is_type_alias;
+
+    // alias (type ID = int;);
     AstType *alias_type;
 } SemaSymbol;
 
