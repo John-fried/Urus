@@ -25,13 +25,8 @@ Verify the build:
 Tests live in `tests/run/`. Each test is a pair of files: a `.urus` source file and a `.expected` file containing the expected output.
 
 ```bash
-cd tests
-
-# Linux / macOS
-bash run_tests.sh ../compiler/build/urusc
-
-# Windows
-run_tests.bat ..\compiler\build\Debug\urusc.exe
+cd compiler/build    # Make sure you're in the build directories
+ctest               # Run all tests
 ```
 
 The test runner compiles each `.urus` file, runs the resulting binary, and compares the output against the `.expected` file. Any mismatch is a failure.

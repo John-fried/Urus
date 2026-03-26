@@ -18,13 +18,8 @@ Thank you for your interest in contributing to URUS! This guide will help you ge
    ```
 4. **Run tests** to make sure everything works:
    ```bash
-   cd tests
-
-   # Linux / macOS
-   bash run_tests.sh ../compiler/build/urusc
-
-   # Windows
-   run_tests.bat ..\compiler\build\Debug\urusc.exe
+    cd compiler/build    # Make sure you're in the build directories
+    ctest               # Run all tests
    ```
 
 ## How to Contribute
@@ -62,8 +57,8 @@ Thank you for your interest in contributing to URUS! This guide will help you ge
 
 4. **Run the test suite:**
    ```bash
-   cd tests
-   bash run_tests.sh ../compiler/build/urusc
+    cd compiler/build    # Make sure you're in the build directories
+    ctest               # Run all tests
    ```
 
 5. **Commit** with a clear message:
