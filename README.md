@@ -584,13 +584,8 @@ Urus/
 ## Running Tests
 
 ```bash
-cd tests/
-
-# Linux / macOS
-bash run_tests.sh ../compiler/build/urusc
-
-# Windows
-run_tests.bat ..\compiler\build\Debug\urusc.exe
+cd compiler/build    # Make sure you're in the build directories
+ctest               # Run all tests
 ```
 
 Each test consists of a `.urus` source file and a `.expected` file. The test runner compiles and runs the program, then compares the output against the expected file.
