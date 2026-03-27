@@ -49,23 +49,38 @@ Run the test suite to confirm it passes.
 
 ## Coding standards
 
-### C style
+# C style
 
-The compiler is written in C11. Follow these conventions:
+The compiler is written in C11. Follow these conventions using our `.clang-format` configuration:
 
-- **Indentation:** 4 spaces, no tabs.
-- **Braces:** K&R style — opening brace on the same line as the statement.
-- **Naming:** `snake_case` for everything. Public functions use a module prefix: `lexer_`, `parser_`, `sema_`, `codegen_`, `ast_`, `error_`, `urus_`.
-- **Line length:** soft limit of ~100 characters.
-- **Compile clean:** the codebase should build without warnings under `-Wall -Wextra`.
+- **Indentation:** 4 spaces, no tabs (`IndentWidth: 4`, `UseTab: Never`).
+- **Braces (Custom Mozilla/K&R hybrid):**
+    - Opening brace on a **new line** for functions and classes (`AfterFunction: true`).
+    - Opening brace on the **same line** for control statements like `if`, `for`, and `while` (`AfterControlStatement: false`).
+- **Short Statements:** No single-line blocks. Functions, enums, and `if` statements must always be broken into multiple lines (`AllowShort...: false/None`).
+- **Naming:** `snake_case` for everything. Public functions use a module prefix: `lexer_`.
+- **Line length:** Hard limit of **80 characters** (`ColumnLimit: 80`).
+- **Compile clean:** The codebase should build without warnings under `-Wall -Wextra`.
+
+### Code Example
 
 ```c
-void lexer_advance(Lexer *l) {
+/* Function: Brace on a new line */
+void
+lexer_advance(Lexer *l)
+{
+    /* Control flow: Brace on the same line */
     if (l->pos >= l->len) {
         return;
     }
     l->pos++;
 }
+
+/* Struct/Enum: Brace on the same line */
+typedef struct {
+    int pos;
+    int len;
+} Lexer;
 ```
 
 ### Memory rules
