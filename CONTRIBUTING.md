@@ -76,10 +76,33 @@ Thank you for your interest in contributing to URUS! This guide will help you ge
 ### C Code (Compiler)
 
 - **Standard:** C11 (`-std=c11`)
-- **Style:** K&R braces, 4-space indentation
-- **Naming:** `snake_case` for everything
-- **Prefixes:** `lexer_`, `parser_`, `sema_`, `codegen_`, `ast_`, `urus_`
-- **Compile clean:** No warnings with `-Wall -Wextra`
+- **Indentation:** 4 spaces, no tabs (`IndentWidth: 4`, `UseTab: Never`).
+- **Braces (Custom Mozilla/K&R hybrid):**
+    - Opening brace on a **new line** for functions and classes (`AfterFunction: true`).
+    - Opening brace on the **same line** for control statements like `if`, `for`, and `while` (`AfterControlStatement: false`).
+- **Short Statements:** No single-line blocks. Functions, enums, and `if` statements must always be broken into multiple lines (`AllowShort...: false/None`).
+- **Naming:** `snake_case` for everything. Public functions use a module prefix: `lexer_`.
+- **Line length:** Hard limit of **80 characters** (`ColumnLimit: 80`).
+- **Compile clean:** The codebase should build without warnings under `-Wall -Wextra`.
+
+```c
+/* Function: Brace on a new line */
+void
+lexer_advance(Lexer *l)
+{
+    /* Control flow: Brace on the same line */
+    if (l->pos >= l->len) {
+        return;
+    }
+    l->pos++;
+}
+
+/* Struct/Enum: Brace on the same line */
+typedef struct {
+    int pos;
+    int len;
+} Lexer;
+```
 
 ### Commit Messages
 
